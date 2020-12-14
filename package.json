@@ -1,0 +1,70 @@
+{
+  "name": "linkswap",
+  "version": "1.0.0",
+  "description": "LinkSwap smart contracts",
+  "license": "UNLICENSED",
+  "homepage": "https://yflink.io/",
+  "keywords": [
+    "chainlink",
+    "core",
+    "ethereum",
+    "linkswap",
+    "uniswap",
+    "yearn",
+    "yfi",
+    "yflink",
+    "yfl"
+  ],
+  "files": [
+    "contracts",
+    "!contracts/test",
+    "build"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "devDependencies": {
+    "@ethersproject/strings": "^5.0.3",
+    "@types/chai": "^4.2.12",
+    "@types/mocha": "^8.0.3",
+    "chai": "^4.2.0",
+    "ethereum-waffle": "^2.4.1",
+    "ethereumjs-util": "^6.2.0",
+    "mocha": "^8.1.3",
+    "prettier": "^2.1.2",
+    "prettier-plugin-solidity": "^1.0.0-alpha.59",
+    "solc": "0.6.6",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "3.1.0",
+    "@uniswap/lib": "^1.1.4",
+    "@uniswap/v2-core": "^1.0.1",
+    "@uniswap/v2-periphery": "^1.1.0-beta.0"
+  },
+  "scripts": {
+    "lint": "yarn prettier './test/**/*.ts' --write",
+    "l": "yarn lint",
+    "sl": "NODE_OPTIONS=--no-warnings yarn prettier --write 'contracts/**/*.sol'",
+    "clean": "rm -rf './build/'",
+    "precompile": "yarn clean && yarn sl",
+    "compile": "waffle .waffle.json",
+    "c": "yarn compile",
+    "pretest": "yarn compile && yarn lint",
+    "test": "mocha './test/**/*.test.ts'",
+    "t": "yarn test",
+    "t-fact": "yarn pretest && mocha './test/LinkswapFactory.test.ts'",
+    "t-lib": "yarn pretest && mocha './test/libraries/*.test.ts'",
+    "t-pair": "yarn pretest && mocha './test/LinkswapPair.test.ts'",
+    "t-router": "yarn pretest && mocha './test/LinkswapRouter.test.ts'",
+    "quicktest": "mocha './test/**/*.test.ts'",
+    "qt": "yarn quicktest",
+    "qt-fact": "mocha './test/LinkswapFactory.test.ts'",
+    "qt-lib": "mocha './test/libraries/*.test.ts'",
+    "qt-or": "mocha './test/LinkswapPriceOracle.test.ts'",
+    "qt-pair": "mocha './test/LinkswapPair.test.ts'",
+    "qt-router": "mocha './test/LinkswapRouter.test.ts'",
+    "qt-yyfl": "mocha './test/yYFL.test.ts'"
+  }
+}

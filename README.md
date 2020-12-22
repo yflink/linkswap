@@ -1,4 +1,4 @@
-# LinkSwap
+# LINKSWAP
 
 # Local Development
 

@@ -52,7 +52,10 @@ contract YFLPurchaser is IYFLPurchaser, ReentrancyGuard {
     }
 
     // transfers all tokens back to governance address
-    function emergencyWithdraw(address[] calldata tokens) external onlyGovernance {
+    function emergencyWithdraw(address[] calldata tokens)
+        external
+        onlyGovernance
+    {
         for (uint256 i = 0; i < tokens.length; i++) {
             IERC20 token = IERC20(tokens[i]);
             token.safeTransfer(governance, token.balanceOf(address(this)));
@@ -60,9 +63,17 @@ contract YFLPurchaser is IYFLPurchaser, ReentrancyGuard {
     }
 
     // Converts LINK or WETH to YFL via Uniswap V2 - no other tokens accepted for this implementation.
-    function purchaseYfl(address[] calldata tokens) external override onlyGovernance nonReentrant {
+    function purchaseYfl(address[] calldata tokens)
+        external
+        override
+        onlyGovernance
+        nonReentrant
+    {
         for (uint256 i = 0; i < tokens.length; i++) {
-            require(tokens[i] == link || tokens[i] == weth, "YFLPurchaser: INVALID_TOKEN");
+            require(
+                tokens[i] == link || tokens[i] == weth,
+                "YFLPurchaser: INVALID_TOKEN"
+            );
             if (tokens[i] == link) {
                 IERC20 linkToken = IERC20(link);
                 uint256 linkBalance = linkToken.balanceOf(address(this));
@@ -109,18 +120,21 @@ contract YFLPurchaser is IYFLPurchaser, ReentrancyGuard {
         address token0 = inputToken < outputToken ? inputToken : outputToken;
         uint256 amountOut;
         {
-            (uint256 token0Reserve, uint256 token1Reserve, ) = IUniswapV2Pair(pair).getReserves();
-            (uint256 reserveIn, uint256 reserveOut) = inputToken == token0
-                ? (token0Reserve, token1Reserve)
-                : (token1Reserve, token0Reserve);
+            (uint256 token0Reserve, uint256 token1Reserve, ) =
+                IUniswapV2Pair(pair).getReserves();
+            (uint256 reserveIn, uint256 reserveOut) =
+                inputToken == token0
+                    ? (token0Reserve, token1Reserve)
+                    : (token1Reserve, token0Reserve);
             uint256 amountInWithFee = inputAmount.mul(997);
             uint256 numerator = amountInWithFee.mul(reserveOut);
             uint256 denominator = reserveIn.mul(1000).add(amountInWithFee);
             amountOut = numerator / denominator;
         }
-        (uint256 amount0Out, uint256 amount1Out) = inputToken == token0
-            ? (uint256(0), amountOut)
-            : (amountOut, uint256(0));
+        (uint256 amount0Out, uint256 amount1Out) =
+            inputToken == token0
+                ? (uint256(0), amountOut)
+                : (amountOut, uint256(0));
         IUniswapV2Pair(pair).swap(amount0Out, amount1Out, pair, new bytes(0));
     }
 }

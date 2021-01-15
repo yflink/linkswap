@@ -1,7 +1,11 @@
 pragma solidity 0.6.6;
 
 interface IUniswapV2Pair {
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
     event Transfer(address indexed from, address indexed to, uint256 value);
 
     function name() external pure returns (string memory);
@@ -14,7 +18,10 @@ interface IUniswapV2Pair {
 
     function balanceOf(address owner) external view returns (uint256);
 
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(address owner, address spender)
+        external
+        view
+        returns (uint256);
 
     function approve(address spender, uint256 value) external returns (bool);
 
@@ -43,7 +50,12 @@ interface IUniswapV2Pair {
     ) external;
 
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
-    event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
+    event Burn(
+        address indexed sender,
+        uint256 amount0,
+        uint256 amount1,
+        address indexed to
+    );
     event Swap(
         address indexed sender,
         uint256 amount0In,
@@ -79,7 +91,9 @@ interface IUniswapV2Pair {
 
     function mint(address to) external returns (uint256 liquidity);
 
-    function burn(address to) external returns (uint256 amount0, uint256 amount1);
+    function burn(address to)
+        external
+        returns (uint256 amount0, uint256 amount1);
 
     function swap(
         uint256 amount0Out,

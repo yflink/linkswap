@@ -53,7 +53,11 @@ contract LinkswapRouter is ILinkswapRouter {
         );
 
         // refund dust eth, if any
-        TransferHelper.safeTransfer(WETH, msg.sender, IERC20(WETH).balanceOf(address(this)));
+        TransferHelper.safeTransfer(
+            WETH,
+            msg.sender,
+            IERC20(WETH).balanceOf(address(this))
+        );
     }
 
     // **** ADD LIQUIDITY ****
@@ -65,19 +69,31 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 amountAMin,
         uint256 amountBMin
     ) internal view virtual returns (uint256 amountA, uint256 amountB) {
-        require(ILinkswapFactory(factory).getPair(tokenA, tokenB) != address(0), "LinkswapRouter: PAIR_NOT_CREATED");
-        (uint256 reserveA, uint256 reserveB) = LinkswapLibrary.getReserves(factory, tokenA, tokenB);
+        require(
+            ILinkswapFactory(factory).getPair(tokenA, tokenB) != address(0),
+            "LinkswapRouter: PAIR_NOT_CREATED"
+        );
+        (uint256 reserveA, uint256 reserveB) =
+            LinkswapLibrary.getReserves(factory, tokenA, tokenB);
         if (reserveA == 0 && reserveB == 0) {
             (amountA, amountB) = (amountADesired, amountBDesired);
         } else {
-            uint256 amountBOptimal = LinkswapLibrary.quote(amountADesired, reserveA, reserveB);
+            uint256 amountBOptimal =
+                LinkswapLibrary.quote(amountADesired, reserveA, reserveB);
             if (amountBOptimal <= amountBDesired) {
-                require(amountBOptimal >= amountBMin, "LinkswapRouter: INSUFFICIENT_B_AMOUNT");
+                require(
+                    amountBOptimal >= amountBMin,
+                    "LinkswapRouter: INSUFFICIENT_B_AMOUNT"
+                );
                 (amountA, amountB) = (amountADesired, amountBOptimal);
             } else {
-                uint256 amountAOptimal = LinkswapLibrary.quote(amountBDesired, reserveB, reserveA);
+                uint256 amountAOptimal =
+                    LinkswapLibrary.quote(amountBDesired, reserveB, reserveA);
                 assert(amountAOptimal <= amountADesired);
-                require(amountAOptimal >= amountAMin, "LinkswapRouter: INSUFFICIENT_A_AMOUNT");
+                require(
+                    amountAOptimal >= amountAMin,
+                    "LinkswapRouter: INSUFFICIENT_A_AMOUNT"
+                );
                 (amountA, amountB) = (amountAOptimal, amountBDesired);
             }
         }
@@ -103,7 +119,14 @@ contract LinkswapRouter is ILinkswapRouter {
             uint256 liquidity
         )
     {
-        (amountA, amountB) = _addLiquidity(tokenA, tokenB, amountADesired, amountBDesired, amountAMin, amountBMin);
+        (amountA, amountB) = _addLiquidity(
+            tokenA,
+            tokenB,
+            amountADesired,
+            amountBDesired,
+            amountAMin,
+            amountBMin
+        );
         address pair = LinkswapLibrary.pairFor(factory, tokenA, tokenB);
         TransferHelper.safeTransferFrom(tokenA, msg.sender, pair, amountA);
         TransferHelper.safeTransferFrom(tokenB, msg.sender, pair, amountB);
@@ -143,7 +166,8 @@ contract LinkswapRouter is ILinkswapRouter {
         assert(IWETH(WETH).transfer(pair, amountETH));
         liquidity = ILinkswapPair(pair).mint(to);
         // refund dust eth, if any
-        if (msg.value > amountETH) TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
+        if (msg.value > amountETH)
+            TransferHelper.safeTransferETH(msg.sender, msg.value - amountETH);
     }
 
     // **** REMOVE LIQUIDITY ****
@@ -155,12 +179,20 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 amountBMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountA, uint256 amountB) {
+    )
+        public
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256 amountA, uint256 amountB)
+    {
         address pair = LinkswapLibrary.pairFor(factory, tokenA, tokenB);
         IERC20(pair).transferFrom(msg.sender, pair, liquidity); // send liquidity to pair
         (uint256 amount0, uint256 amount1) = ILinkswapPair(pair).burn(to);
         (address token0, ) = LinkswapLibrary.sortTokens(tokenA, tokenB);
-        (amountA, amountB) = tokenA == token0 ? (amount0, amount1) : (amount1, amount0);
+        (amountA, amountB) = tokenA == token0
+            ? (amount0, amount1)
+            : (amount1, amount0);
         require(amountA >= amountAMin, "LinkswapRouter: INSUFFICIENT_A_AMOUNT");
         require(amountB >= amountBMin, "LinkswapRouter: INSUFFICIENT_B_AMOUNT");
     }
@@ -172,7 +204,13 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 amountETHMin,
         address to,
         uint256 deadline
-    ) public virtual override ensure(deadline) returns (uint256 amountToken, uint256 amountETH) {
+    )
+        public
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256 amountToken, uint256 amountETH)
+    {
         (amountToken, amountETH) = removeLiquidity(
             token,
             WETH,
@@ -202,8 +240,24 @@ contract LinkswapRouter is ILinkswapRouter {
     ) external virtual override returns (uint256 amountA, uint256 amountB) {
         address pair = LinkswapLibrary.pairFor(factory, tokenA, tokenB);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        ILinkswapPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        (amountA, amountB) = removeLiquidity(tokenA, tokenB, liquidity, amountAMin, amountBMin, to, deadline);
+        ILinkswapPair(pair).permit(
+            msg.sender,
+            address(this),
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+        (amountA, amountB) = removeLiquidity(
+            tokenA,
+            tokenB,
+            liquidity,
+            amountAMin,
+            amountBMin,
+            to,
+            deadline
+        );
     }
 
     function removeLiquidityETHWithPermit(
@@ -217,11 +271,31 @@ contract LinkswapRouter is ILinkswapRouter {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external virtual override returns (uint256 amountToken, uint256 amountETH) {
+    )
+        external
+        virtual
+        override
+        returns (uint256 amountToken, uint256 amountETH)
+    {
         address pair = LinkswapLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        ILinkswapPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
-        (amountToken, amountETH) = removeLiquidityETH(token, liquidity, amountTokenMin, amountETHMin, to, deadline);
+        ILinkswapPair(pair).permit(
+            msg.sender,
+            address(this),
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
+        (amountToken, amountETH) = removeLiquidityETH(
+            token,
+            liquidity,
+            amountTokenMin,
+            amountETHMin,
+            to,
+            deadline
+        );
     }
 
     // **** REMOVE LIQUIDITY (supporting fee-on-transfer tokens) ****
@@ -233,8 +307,20 @@ contract LinkswapRouter is ILinkswapRouter {
         address to,
         uint256 deadline
     ) public virtual override ensure(deadline) returns (uint256 amountETH) {
-        (, amountETH) = removeLiquidity(token, WETH, liquidity, amountTokenMin, amountETHMin, address(this), deadline);
-        TransferHelper.safeTransfer(token, to, IERC20(token).balanceOf(address(this)));
+        (, amountETH) = removeLiquidity(
+            token,
+            WETH,
+            liquidity,
+            amountTokenMin,
+            amountETHMin,
+            address(this),
+            deadline
+        );
+        TransferHelper.safeTransfer(
+            token,
+            to,
+            IERC20(token).balanceOf(address(this))
+        );
         IWETH(WETH).withdraw(amountETH);
         TransferHelper.safeTransferETH(to, amountETH);
     }
@@ -253,7 +339,15 @@ contract LinkswapRouter is ILinkswapRouter {
     ) external virtual override returns (uint256 amountETH) {
         address pair = LinkswapLibrary.pairFor(factory, token, WETH);
         uint256 value = approveMax ? uint256(-1) : liquidity;
-        ILinkswapPair(pair).permit(msg.sender, address(this), value, deadline, v, r, s);
+        ILinkswapPair(pair).permit(
+            msg.sender,
+            address(this),
+            value,
+            deadline,
+            v,
+            r,
+            s
+        );
         amountETH = removeLiquidityETHSupportingFeeOnTransferTokens(
             token,
             liquidity,
@@ -275,10 +369,14 @@ contract LinkswapRouter is ILinkswapRouter {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0, ) = LinkswapLibrary.sortTokens(input, output);
             uint256 amountOut = amounts[i + 1];
-            (uint256 amount0Out, uint256 amount1Out) = input == token0
-                ? (uint256(0), amountOut)
-                : (amountOut, uint256(0));
-            address to = i < path.length - 2 ? LinkswapLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            (uint256 amount0Out, uint256 amount1Out) =
+                input == token0
+                    ? (uint256(0), amountOut)
+                    : (amountOut, uint256(0));
+            address to =
+                i < path.length - 2
+                    ? LinkswapLibrary.pairFor(factory, output, path[i + 2])
+                    : _to;
             ILinkswapPair(LinkswapLibrary.pairFor(factory, input, output)).swap(
                 amount0Out,
                 amount1Out,
@@ -294,9 +392,18 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         amounts = LinkswapLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(
+            amounts[amounts.length - 1] >= amountOutMin,
+            "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -312,9 +419,18 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         amounts = LinkswapLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(
+            amounts[0] <= amountInMax,
+            "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT"
+        );
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -329,12 +445,27 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        payable
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         require(path[0] == WETH, "LinkswapRouter: INVALID_PATH");
         amounts = LinkswapLibrary.getAmountsOut(factory, msg.value, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(
+            amounts[amounts.length - 1] >= amountOutMin,
+            "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(LinkswapLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(
+            IWETH(WETH).transfer(
+                LinkswapLibrary.pairFor(factory, path[0], path[1]),
+                amounts[0]
+            )
+        );
         _swap(amounts, path, to);
     }
 
@@ -344,10 +475,19 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         require(path[path.length - 1] == WETH, "LinkswapRouter: INVALID_PATH");
         amounts = LinkswapLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= amountInMax, "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(
+            amounts[0] <= amountInMax,
+            "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT"
+        );
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -365,10 +505,19 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         require(path[path.length - 1] == WETH, "LinkswapRouter: INVALID_PATH");
         amounts = LinkswapLibrary.getAmountsOut(factory, amountIn, path);
-        require(amounts[amounts.length - 1] >= amountOutMin, "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(
+            amounts[amounts.length - 1] >= amountOutMin,
+            "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
         TransferHelper.safeTransferFrom(
             path[0],
             msg.sender,
@@ -385,33 +534,56 @@ contract LinkswapRouter is ILinkswapRouter {
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable virtual override ensure(deadline) returns (uint256[] memory amounts) {
+    )
+        external
+        payable
+        virtual
+        override
+        ensure(deadline)
+        returns (uint256[] memory amounts)
+    {
         require(path[0] == WETH, "LinkswapRouter: INVALID_PATH");
         amounts = LinkswapLibrary.getAmountsIn(factory, amountOut, path);
-        require(amounts[0] <= msg.value, "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT");
+        require(
+            amounts[0] <= msg.value,
+            "LinkswapRouter: EXCESSIVE_INPUT_AMOUNT"
+        );
         IWETH(WETH).deposit{value: amounts[0]}();
-        assert(IWETH(WETH).transfer(LinkswapLibrary.pairFor(factory, path[0], path[1]), amounts[0]));
+        assert(
+            IWETH(WETH).transfer(
+                LinkswapLibrary.pairFor(factory, path[0], path[1]),
+                amounts[0]
+            )
+        );
         _swap(amounts, path, to);
         // refund dust eth, if any
-        if (msg.value > amounts[0]) TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
+        if (msg.value > amounts[0])
+            TransferHelper.safeTransferETH(msg.sender, msg.value - amounts[0]);
     }
 
     // **** SWAP (supporting fee-on-transfer tokens) ****
     // requires the initial amount to have already been sent to the first pair
-    function _swapSupportingFeeOnTransferTokens(address[] memory path, address _to) internal virtual {
+    function _swapSupportingFeeOnTransferTokens(
+        address[] memory path,
+        address _to
+    ) internal virtual {
         for (uint256 i; i < path.length - 1; i++) {
             (address input, address output) = (path[i], path[i + 1]);
             (address token0, ) = LinkswapLibrary.sortTokens(input, output);
-            ILinkswapPair pair = ILinkswapPair(LinkswapLibrary.pairFor(factory, input, output));
+            ILinkswapPair pair =
+                ILinkswapPair(LinkswapLibrary.pairFor(factory, input, output));
             uint256 amountInput;
             uint256 amountOutput;
             {
                 // scope to avoid stack too deep errors
                 (uint256 reserve0, uint256 reserve1, ) = pair.getReserves();
-                (uint256 reserveInput, uint256 reserveOutput) = input == token0
-                    ? (reserve0, reserve1)
-                    : (reserve1, reserve0);
-                amountInput = IERC20(input).balanceOf(address(pair)).sub(reserveInput);
+                (uint256 reserveInput, uint256 reserveOutput) =
+                    input == token0
+                        ? (reserve0, reserve1)
+                        : (reserve1, reserve0);
+                amountInput = IERC20(input).balanceOf(address(pair)).sub(
+                    reserveInput
+                );
                 amountOutput = LinkswapLibrary.getAmountOut(
                     amountInput,
                     reserveInput,
@@ -419,10 +591,14 @@ contract LinkswapRouter is ILinkswapRouter {
                     pair.tradingFeePercent()
                 );
             }
-            (uint256 amount0Out, uint256 amount1Out) = input == token0
-                ? (uint256(0), amountOutput)
-                : (amountOutput, uint256(0));
-            address to = i < path.length - 2 ? LinkswapLibrary.pairFor(factory, output, path[i + 2]) : _to;
+            (uint256 amount0Out, uint256 amount1Out) =
+                input == token0
+                    ? (uint256(0), amountOutput)
+                    : (amountOutput, uint256(0));
+            address to =
+                i < path.length - 2
+                    ? LinkswapLibrary.pairFor(factory, output, path[i + 2])
+                    : _to;
             pair.swap(amount0Out, amount1Out, to, new bytes(0));
         }
     }
@@ -443,7 +619,8 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
+                amountOutMin,
             "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
@@ -457,11 +634,17 @@ contract LinkswapRouter is ILinkswapRouter {
         require(path[0] == WETH, "LinkswapRouter: INVALID_PATH");
         uint256 amountIn = msg.value;
         IWETH(WETH).deposit{value: amountIn}();
-        assert(IWETH(WETH).transfer(LinkswapLibrary.pairFor(factory, path[0], path[1]), amountIn));
+        assert(
+            IWETH(WETH).transfer(
+                LinkswapLibrary.pairFor(factory, path[0], path[1]),
+                amountIn
+            )
+        );
         uint256 balanceBefore = IERC20(path[path.length - 1]).balanceOf(to);
         _swapSupportingFeeOnTransferTokens(path, to);
         require(
-            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >= amountOutMin,
+            IERC20(path[path.length - 1]).balanceOf(to).sub(balanceBefore) >=
+                amountOutMin,
             "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
         );
     }
@@ -482,7 +665,10 @@ contract LinkswapRouter is ILinkswapRouter {
         );
         _swapSupportingFeeOnTransferTokens(path, address(this));
         uint256 amountOut = IERC20(WETH).balanceOf(address(this));
-        require(amountOut >= amountOutMin, "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT");
+        require(
+            amountOut >= amountOutMin,
+            "LinkswapRouter: INSUFFICIENT_OUTPUT_AMOUNT"
+        );
         IWETH(WETH).withdraw(amountOut);
         TransferHelper.safeTransferETH(to, amountOut);
     }
@@ -502,7 +688,13 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 reserveOut,
         uint256 tradingFeePercent
     ) public pure virtual override returns (uint256 amountOut) {
-        return LinkswapLibrary.getAmountOut(amountIn, reserveIn, reserveOut, tradingFeePercent);
+        return
+            LinkswapLibrary.getAmountOut(
+                amountIn,
+                reserveIn,
+                reserveOut,
+                tradingFeePercent
+            );
     }
 
     function getAmountIn(
@@ -511,7 +703,13 @@ contract LinkswapRouter is ILinkswapRouter {
         uint256 reserveOut,
         uint256 tradingFeePercent
     ) public pure virtual override returns (uint256 amountIn) {
-        return LinkswapLibrary.getAmountIn(amountOut, reserveIn, reserveOut, tradingFeePercent);
+        return
+            LinkswapLibrary.getAmountIn(
+                amountOut,
+                reserveIn,
+                reserveOut,
+                tradingFeePercent
+            );
     }
 
     function getAmountsOut(uint256 amountIn, address[] memory path)

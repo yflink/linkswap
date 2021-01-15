@@ -11,8 +11,8 @@ interface ILinkswapPriceOracle {
         returns (uint256 tokenAmount);
 
     // token must be LINK / WETH
-    function calculateUsdAmountFromTokenAmount(address token, uint256 tokenAmount)
-        external
-        view
-        returns (uint256 usdAmount);
+    function calculateUsdAmountFromTokenAmount(
+        address token,
+        uint256 tokenAmount
+    ) external view returns (uint256 usdAmount);
 }

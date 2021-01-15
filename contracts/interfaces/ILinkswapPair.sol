@@ -4,9 +4,18 @@ import "./ILinkswapERC20.sol";
 
 interface ILinkswapPair is ILinkswapERC20 {
     event Mint(address indexed sender, uint256 amount0, uint256 amount1);
-    event Lock(address indexed sender, uint256 lockupPeriod, uint256 liquidityLockupAmount);
+    event Lock(
+        address indexed sender,
+        uint256 lockupPeriod,
+        uint256 liquidityLockupAmount
+    );
     event Unlock(address indexed sender, uint256 liquidityUnlocked);
-    event Burn(address indexed sender, uint256 amount0, uint256 amount1, address indexed to);
+    event Burn(
+        address indexed sender,
+        uint256 amount0,
+        uint256 amount1,
+        address indexed to
+    );
     event Swap(
         address indexed sender,
         uint256 amount0In,
@@ -58,7 +67,9 @@ interface ILinkswapPair is ILinkswapERC20 {
 
     function unlock() external;
 
-    function burn(address to) external returns (uint256 amount0, uint256 amount1);
+    function burn(address to)
+        external
+        returns (uint256 amount0, uint256 amount1);
 
     function swap(
         uint256 amount0Out,

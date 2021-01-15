@@ -80,14 +80,23 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         return allPairs.length;
     }
 
-    function _validatePair(address tokenA, address tokenB) private view returns (address token0, address token1) {
+    function _validatePair(address tokenA, address tokenB)
+        private
+        view
+        returns (address token0, address token1)
+    {
         require(tokenA != tokenB);
-        (token0, token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
+        (token0, token1) = tokenA < tokenB
+            ? (tokenA, tokenB)
+            : (tokenB, tokenA);
         require(token0 != address(0));
         require(getPair[token0][token1] == address(0)); // single check is sufficient
     }
 
-    function _createPair(address token0, address token1) private returns (address pair) {
+    function _createPair(address token0, address token1)
+        private
+        returns (address pair)
+    {
         {
             bytes memory bytecode = type(LinkswapPair).creationCode;
             bytes32 salt = keccak256(abi.encodePacked(token0, token1));
@@ -108,7 +117,12 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         emit PairCreated(token0, token1, pair, allPairs.length);
     }
 
-    function approvePairViaGovernance(address tokenA, address tokenB) external override onlyGovernance nonReentrant {
+    function approvePairViaGovernance(address tokenA, address tokenB)
+        external
+        override
+        onlyGovernance
+        nonReentrant
+    {
         (address token0, address token1) = _validatePair(tokenA, tokenB);
         approvedPair[token0][token1] = true;
     }
@@ -118,30 +132,34 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         uint256 lockupAmountInUsd,
         uint256 lockupPeriod
     ) private {
-        require(listingFeeToken == LINK || listingFeeToken == WETH || listingFeeToken == YFL);
+        require(
+            listingFeeToken == LINK ||
+                listingFeeToken == WETH ||
+                listingFeeToken == YFL
+        );
         uint256 listingFeeTokenAmount;
         if (listingFeeToken == LINK) {
-            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle).calculateTokenAmountFromUsdAmount(
-                LINK,
-                linkListingFeeInUsd
-            );
+            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle)
+                .calculateTokenAmountFromUsdAmount(LINK, linkListingFeeInUsd);
         } else if (listingFeeToken == WETH) {
-            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle).calculateTokenAmountFromUsdAmount(
-                WETH,
-                wethListingFeeInUsd
-            );
+            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle)
+                .calculateTokenAmountFromUsdAmount(WETH, wethListingFeeInUsd);
         } else if (listingFeeToken == YFL) {
             ILinkswapPriceOracle(priceOracle).update();
-            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle).calculateTokenAmountFromUsdAmount(
-                YFL,
-                yflListingFeeInUsd
-            );
+            listingFeeTokenAmount = ILinkswapPriceOracle(priceOracle)
+                .calculateTokenAmountFromUsdAmount(YFL, yflListingFeeInUsd);
         }
         uint256 discount;
         if (targetListingLockupAmountInUsd > minListingLockupAmountInUsd) {
             discount =
-                lockupAmountListingFeeDiscountShare.mul(lockupAmountInUsd.sub(minListingLockupAmountInUsd)) /
-                (targetListingLockupAmountInUsd.sub(minListingLockupAmountInUsd));
+                lockupAmountListingFeeDiscountShare.mul(
+                    lockupAmountInUsd.sub(minListingLockupAmountInUsd)
+                ) /
+                (
+                    targetListingLockupAmountInUsd.sub(
+                        minListingLockupAmountInUsd
+                    )
+                );
         }
         if (targetListingLockupPeriod > minListingLockupPeriod) {
             discount = discount.add(
@@ -150,18 +168,22 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
                 ) / (targetListingLockupPeriod.sub(minListingLockupPeriod))
             );
         }
-        uint256 discountedListingFeeTokenAmount = listingFeeTokenAmount.mul(uint256(1000000).sub(discount)) / 1000000;
+        uint256 discountedListingFeeTokenAmount =
+            listingFeeTokenAmount.mul(uint256(1000000).sub(discount)) / 1000000;
         TransferHelper.safeTransferFrom(
             listingFeeToken,
             msg.sender,
             treasury,
-            discountedListingFeeTokenAmount.mul(treasuryListingFeeShare) / 1000000
+            discountedListingFeeTokenAmount.mul(treasuryListingFeeShare) /
+                1000000
         );
         TransferHelper.safeTransferFrom(
             listingFeeToken,
             msg.sender,
             governance,
-            discountedListingFeeTokenAmount.mul(uint256(1000000).sub(treasuryListingFeeShare)) / 1000000
+            discountedListingFeeTokenAmount.mul(
+                uint256(1000000).sub(treasuryListingFeeShare)
+            ) / 1000000
         );
     }
 
@@ -179,26 +201,46 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         if (!approvedPair[token0][token1]) {
             require(lockupToken == LINK || lockupToken == WETH);
             require(lockupPeriod >= minListingLockupPeriod);
-            uint256 lockupAmountInUsd = ILinkswapPriceOracle(priceOracle).calculateUsdAmountFromTokenAmount(
-                lockupToken,
-                lockupTokenAmount
-            );
+            uint256 lockupAmountInUsd =
+                ILinkswapPriceOracle(priceOracle)
+                    .calculateUsdAmountFromTokenAmount(
+                    lockupToken,
+                    lockupTokenAmount
+                );
             require(lockupAmountInUsd >= minListingLockupAmountInUsd);
             _payListingFee(listingFeeToken, lockupAmountInUsd, lockupPeriod);
         }
         pair = _createPair(token0, token1);
         uint256 liquidity;
         if (newTokenAmount > 0 && lockupTokenAmount > 0) {
-            TransferHelper.safeTransferFrom(newToken, msg.sender, pair, newTokenAmount);
-            TransferHelper.safeTransferFrom(lockupToken, msg.sender, pair, lockupTokenAmount);
+            TransferHelper.safeTransferFrom(
+                newToken,
+                msg.sender,
+                pair,
+                newTokenAmount
+            );
+            TransferHelper.safeTransferFrom(
+                lockupToken,
+                msg.sender,
+                pair,
+                lockupTokenAmount
+            );
             liquidity = LinkswapPair(pair).mint(msg.sender);
         }
-        if (!approvedPair[token0][token1] && lockupTokenAmount > 0 && lockupPeriod > 0) {
+        if (
+            !approvedPair[token0][token1] &&
+            lockupTokenAmount > 0 &&
+            lockupPeriod > 0
+        ) {
             LinkswapPair(pair).listingLock(msg.sender, lockupPeriod, liquidity);
         }
     }
 
-    function setPriceOracle(address _priceOracle) external override onlyGovernance {
+    function setPriceOracle(address _priceOracle)
+        external
+        override
+        onlyGovernance
+    {
         priceOracle = _priceOracle;
     }
 
@@ -206,40 +248,73 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         treasury = _treasury;
     }
 
-    function setGovernance(address _governance) external override onlyGovernance {
+    function setGovernance(address _governance)
+        external
+        override
+        onlyGovernance
+    {
         require(_governance != address(0));
         governance = _governance;
     }
 
-    function setTreasuryProtocolFeeShare(uint256 _treasuryProtocolFeeShare) external override onlyGovernance {
+    function setTreasuryProtocolFeeShare(uint256 _treasuryProtocolFeeShare)
+        external
+        override
+        onlyGovernance
+    {
         require(_treasuryProtocolFeeShare <= 1000000);
         treasuryProtocolFeeShare = _treasuryProtocolFeeShare;
     }
 
-    function setProtocolFeeFractionInverse(uint256 _protocolFeeFractionInverse) external override onlyGovernance {
+    function setProtocolFeeFractionInverse(uint256 _protocolFeeFractionInverse)
+        external
+        override
+        onlyGovernance
+    {
         // max 50% of trading fee (2/1 * 1000)
-        require(_protocolFeeFractionInverse >= 2000 || _protocolFeeFractionInverse == 0);
+        require(
+            _protocolFeeFractionInverse >= 2000 ||
+                _protocolFeeFractionInverse == 0
+        );
         protocolFeeFractionInverse = _protocolFeeFractionInverse;
     }
 
-    function setLinkListingFeeInUsd(uint256 _linkListingFeeInUsd) external override onlyGovernance {
+    function setLinkListingFeeInUsd(uint256 _linkListingFeeInUsd)
+        external
+        override
+        onlyGovernance
+    {
         linkListingFeeInUsd = _linkListingFeeInUsd;
     }
 
-    function setWethListingFeeInUsd(uint256 _wethListingFeeInUsd) external override onlyGovernance {
+    function setWethListingFeeInUsd(uint256 _wethListingFeeInUsd)
+        external
+        override
+        onlyGovernance
+    {
         wethListingFeeInUsd = _wethListingFeeInUsd;
     }
 
-    function setYflListingFeeInUsd(uint256 _yflListingFeeInUsd) external override onlyGovernance {
+    function setYflListingFeeInUsd(uint256 _yflListingFeeInUsd)
+        external
+        override
+        onlyGovernance
+    {
         yflListingFeeInUsd = _yflListingFeeInUsd;
     }
 
-    function setTreasuryListingFeeShare(uint256 _treasuryListingFeeShare) external override onlyGovernance {
+    function setTreasuryListingFeeShare(uint256 _treasuryListingFeeShare)
+        external
+        override
+        onlyGovernance
+    {
         require(_treasuryListingFeeShare <= 1000000);
         treasuryListingFeeShare = _treasuryListingFeeShare;
     }
 
-    function _setMinListingLockupAmountInUsd(uint256 _minListingLockupAmountInUsd) private {
+    function _setMinListingLockupAmountInUsd(
+        uint256 _minListingLockupAmountInUsd
+    ) private {
         require(_minListingLockupAmountInUsd <= targetListingLockupAmountInUsd);
         if (_minListingLockupAmountInUsd > 0) {
             // needs to be at least 1000 due to LinkswapPair MINIMUM_LIQUIDITY subtraction
@@ -248,73 +323,93 @@ contract LinkswapFactory is ILinkswapFactory, ReentrancyGuard {
         minListingLockupAmountInUsd = _minListingLockupAmountInUsd;
     }
 
-    function setMinListingLockupAmountInUsd(uint256 _minListingLockupAmountInUsd) external override onlyGovernance {
+    function setMinListingLockupAmountInUsd(
+        uint256 _minListingLockupAmountInUsd
+    ) external override onlyGovernance {
         _setMinListingLockupAmountInUsd(_minListingLockupAmountInUsd);
     }
 
-    function _setTargetListingLockupAmountInUsd(uint256 _targetListingLockupAmountInUsd) private {
+    function _setTargetListingLockupAmountInUsd(
+        uint256 _targetListingLockupAmountInUsd
+    ) private {
         require(_targetListingLockupAmountInUsd >= minListingLockupAmountInUsd);
         targetListingLockupAmountInUsd = _targetListingLockupAmountInUsd;
     }
 
-    function setTargetListingLockupAmountInUsd(uint256 _targetListingLockupAmountInUsd)
-        external
-        override
-        onlyGovernance
-    {
+    function setTargetListingLockupAmountInUsd(
+        uint256 _targetListingLockupAmountInUsd
+    ) external override onlyGovernance {
         _setTargetListingLockupAmountInUsd(_targetListingLockupAmountInUsd);
     }
 
-    function _setMinListingLockupPeriod(uint256 _minListingLockupPeriod) private {
+    function _setMinListingLockupPeriod(uint256 _minListingLockupPeriod)
+        private
+    {
         require(_minListingLockupPeriod <= targetListingLockupPeriod);
         minListingLockupPeriod = _minListingLockupPeriod;
     }
 
-    function setMinListingLockupPeriod(uint256 _minListingLockupPeriod) external override onlyGovernance {
-        _setMinListingLockupPeriod(_minListingLockupPeriod);
-    }
-
-    function _setTargetListingLockupPeriod(uint256 _targetListingLockupPeriod) private {
-        require(_targetListingLockupPeriod >= minListingLockupPeriod);
-        targetListingLockupPeriod = _targetListingLockupPeriod;
-    }
-
-    function setTargetListingLockupPeriod(uint256 _targetListingLockupPeriod) external override onlyGovernance {
-        _setTargetListingLockupPeriod(_targetListingLockupPeriod);
-    }
-
-    function setLockupAmountListingFeeDiscountShare(uint256 _lockupAmountListingFeeDiscountShare)
+    function setMinListingLockupPeriod(uint256 _minListingLockupPeriod)
         external
         override
         onlyGovernance
     {
+        _setMinListingLockupPeriod(_minListingLockupPeriod);
+    }
+
+    function _setTargetListingLockupPeriod(uint256 _targetListingLockupPeriod)
+        private
+    {
+        require(_targetListingLockupPeriod >= minListingLockupPeriod);
+        targetListingLockupPeriod = _targetListingLockupPeriod;
+    }
+
+    function setTargetListingLockupPeriod(uint256 _targetListingLockupPeriod)
+        external
+        override
+        onlyGovernance
+    {
+        _setTargetListingLockupPeriod(_targetListingLockupPeriod);
+    }
+
+    function setLockupAmountListingFeeDiscountShare(
+        uint256 _lockupAmountListingFeeDiscountShare
+    ) external override onlyGovernance {
         require(_lockupAmountListingFeeDiscountShare <= 1000000);
         lockupAmountListingFeeDiscountShare = _lockupAmountListingFeeDiscountShare;
     }
 
-    function setDefaultLinkTradingFeePercent(uint256 _defaultLinkTradingFeePercent) external override onlyGovernance {
+    function setDefaultLinkTradingFeePercent(
+        uint256 _defaultLinkTradingFeePercent
+    ) external override onlyGovernance {
         // max 1%
         require(_defaultLinkTradingFeePercent <= 10000);
         defaultLinkTradingFeePercent = _defaultLinkTradingFeePercent;
     }
 
-    function setDefaultNonLinkTradingFeePercent(uint256 _defaultNonLinkTradingFeePercent)
-        external
-        override
-        onlyGovernance
-    {
+    function setDefaultNonLinkTradingFeePercent(
+        uint256 _defaultNonLinkTradingFeePercent
+    ) external override onlyGovernance {
         // max 1%
         require(_defaultNonLinkTradingFeePercent <= 10000);
         defaultNonLinkTradingFeePercent = _defaultNonLinkTradingFeePercent;
     }
 
-    function setMaxSlippagePercent(uint256 _maxSlippagePercent) external override onlyGovernance {
+    function setMaxSlippagePercent(uint256 _maxSlippagePercent)
+        external
+        override
+        onlyGovernance
+    {
         // max 100%
         require(_maxSlippagePercent <= 100);
         maxSlippagePercent = _maxSlippagePercent;
     }
 
-    function setMaxSlippageBlocks(uint256 _maxSlippageBlocks) external override onlyGovernance {
+    function setMaxSlippageBlocks(uint256 _maxSlippageBlocks)
+        external
+        override
+        onlyGovernance
+    {
         // min 1 block, max 7 days (15s/block)
         require(_maxSlippageBlocks >= 1 && _maxSlippageBlocks <= 40320);
         maxSlippageBlocks = _maxSlippageBlocks;

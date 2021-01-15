@@ -17,7 +17,12 @@ interface IyYFL {
         string description
     );
     // Event emitted when a vote has been cast on a proposal
-    event VoteCast(address indexed voter, uint256 proposalId, bool support, uint256 votes);
+    event VoteCast(
+        address indexed voter,
+        uint256 proposalId,
+        bool support,
+        uint256 votes
+    );
     // Event emitted when a proposal has been executed
     // Success=true if all actions were executed successfully
     // Success=false if not all actions were executed successfully (executeProposal will not revert)
@@ -113,7 +118,10 @@ interface IyYFL {
     function stake(uint256 amount) external;
 
     // call this to swap token revenue to YFL for YFL stakers
-    function convertTokensToYfl(address[] calldata tokens, uint256[] calldata amounts) external;
+    function convertTokensToYfl(
+        address[] calldata tokens,
+        uint256[] calldata amounts
+    ) external;
 
     function withdraw(uint256 shares) external;
 
@@ -137,7 +145,10 @@ interface IyYFL {
 
     function executeProposal(uint256 id) external payable;
 
-    function getVotes(uint256 proposalId, address voter) external view returns (bool support, uint256 voteAmount);
+    function getVotes(uint256 proposalId, address voter)
+        external
+        view
+        returns (bool support, uint256 voteAmount);
 
     function getProposalCalls(uint256 proposalId)
         external

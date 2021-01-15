@@ -1,7 +1,12 @@
 pragma solidity 0.6.6;
 
 interface ILinkswapFactory {
-    event PairCreated(address indexed token0, address indexed token1, address pair, uint256 pairNum);
+    event PairCreated(
+        address indexed token0,
+        address indexed token1,
+        address pair,
+        uint256 pairNum
+    );
 
     function LINK() external view returns (address);
 
@@ -44,7 +49,10 @@ interface ILinkswapFactory {
 
     // need to divide share by 1,000,000 e.g. 100,000 is 10%
     // rest of listing fee discount is determined by lockup period
-    function lockupAmountListingFeeDiscountShare() external view returns (uint256);
+    function lockupAmountListingFeeDiscountShare()
+        external
+        view
+        returns (uint256);
 
     // need to divide fee percents by 1,000,000 e.g. 3000 is 0.3000%
     function defaultLinkTradingFeePercent() external view returns (uint256);
@@ -66,9 +74,15 @@ interface ILinkswapFactory {
     // max slippage resets after this many blocks
     function maxSlippageBlocks() external view returns (uint256);
 
-    function getPair(address tokenA, address tokenB) external view returns (address pair);
+    function getPair(address tokenA, address tokenB)
+        external
+        view
+        returns (address pair);
 
-    function approvedPair(address tokenA, address tokenB) external view returns (bool approved);
+    function approvedPair(address tokenA, address tokenB)
+        external
+        view
+        returns (bool approved);
 
     function allPairs(uint256) external view returns (address pair);
 

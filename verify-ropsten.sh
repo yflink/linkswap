@@ -1,4 +1,6 @@
 echo "Verifying contracts"
+echo "⌛ Verifying ChainlinkOracle Contract"
+npx hardhat verify --network ropsten addr 'arg1' 
 echo "⌛ Verifying YFLink Contract"
 npx hardhat verify --network ropsten addr 'arg1' 
 echo "⌛ Verifying yYFL Contract"

@@ -3,7 +3,6 @@ const fs = require('fs');
 require('dotenv').config();
 
 const yYFLArtifact = './prodartifacts/yYFL.json';
-const ChainlinkOracleArtifact = './prodartifacts/chainlinkOracle.json';
 const YFLinkArtifact = './prodartifacts/YFLink.json';
 const YFLPurchaserArtifact = './prodartifacts/YFLPurchaser.json';
 const LinkswapRouterArtifact = './prodartifacts/LinkswapRouter.json';
@@ -11,11 +10,12 @@ const LinkswapPairArtifact = './prodartifacts/LinkswapPair.json';
 const LinkswapPriceOracleArtifact = './prodartifacts/LinkswapPriceOracle.json';
 const LinkswapFactoryArtifact = './prodartifacts/LinkswapFactory.json';
 
-let wethAddress,
+let wethToken,
+  yflToken,
+  uniswapFactory,
+  yYFLAddress,
   linkUsdChainlinkOracle,
   wethUsdChainlinkOracle,
-  yYflAddress,
-  YFLinkAddress,
   YFLPurchaserAddress,
   LinkswapRouterAddress,
   LinkswapPriceOracleAddress,
@@ -27,17 +27,24 @@ let provider, wallet, connectedWallet;
 if (process.env.NETWORK == 'mainnet') {
   provider = ethers.getDefaultProvider('homestead');
 
-  wethAddress = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
+  wethToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
   linkUsdChainlinkOracle = '0x32dbd3214aC75223e27e575C53944307914F7a90';
   wethUsdChainlinkOracle = '0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F';
+
+  yflToken = '0x28cb7e841ee97947a86B06fA4090C8451f64c0be';
+  linkToken = '0x514910771af9ca656af840dff83e8264ecf986ca';
+  uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
 } else if (process.env.NETWORK == 'ropsten') {
   provider = ethers.getDefaultProvider('ropsten');
 
-  wethAddress = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
+  wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
+  uniswapFactory = '0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351';
+  yflToken = '0xbDF1Af73400CB3419050e896D86f34d42D5492Da';
+  yYFLAddress = '';
+  linkToken = '';
+
   linkUsdChainlinkOracle = '';
   wethUsdChainlinkOracle = '';
-  yYFLAddress = '';
-  YFLinkAddress = '';
   YFLPurchaserAddress = '';
   LinkswapRouterAddress = '';
   LinkswapPriceOracleAddress = '';
@@ -48,14 +55,6 @@ if (process.env.NETWORK == 'mainnet') {
 wallet = Wallet.fromMnemonic(process.env.MNEMONIC);
 connectedWallet = wallet.connect(provider);
 
-// Price oracle
-// Uniswap factory
-const factory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
-const linkToken = '0x514910771af9ca656af840dff83e8264ecf986ca';
-const wethToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
-const yflToken = '0x28cb7e841ee97947a86B06fA4090C8451f64c0be';
-
-// Factory
 // Test addresses
 const governance = '0x0389d755C1833C9b350d4E8B619Eae16deFc1CbA';
 const treasury = '0xE69A81b96FBF5Cb6CAe95d2cE5323Eff2bA0EAE4';
@@ -70,8 +69,6 @@ const minListingLockupPeriod = 7 * 24 * 60 * 60;
 const targetListingLockupPeriod = 30 * 24 * 60 * 60;
 const lockupAmountListingFeeDiscountShare = 500000;
 
-const yYflAddress = yflToken;
-const yTreasuryAddress = treasury;
 const blocksForNoWithdrawalFee = 30 * 24 * 60 * 4; //(30 days in blocks assuming block every 15 seconds)
 const votingPeriodBlocks = 3 * 24 * 60 * 4; //(3 days in blocks)
 const executionPeriodBlocks = 3 * 24 * 60 * 4; //(3 days in blocks)
@@ -150,19 +147,15 @@ const deploy = async (artifactPath, args) => {
 };
 
 // From here, all the args are to be determined.
-if (!linkUsdChainlinkOracle) {
-  deploy(ChainlinkOracleArtifact);
-  return;
-}
 
-if (!YFLinkAddress) {
+if (!yflToken) {
   deploy(YFLinkArtifact);
   return;
 }
 
 if (!yYFLAddress) {
   deploy(yYFLArtifact, [
-    YFLinkAddress,
+    yflToken,
     treasury,
     blocksForNoWithdrawalFee,
     votingPeriodBlocks,
@@ -216,7 +209,7 @@ if (!LinkswapRouterAddress) {
 
 if (!LinkswapPriceOracleAddress) {
   deploy(LinkswapPriceOracleArtifact, [
-    factory,
+    uniswapFactory,
     linkToken,
     wethToken,
     yflToken,

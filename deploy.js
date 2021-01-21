@@ -39,9 +39,9 @@ if (process.env.NETWORK == 'mainnet') {
 
   wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
   uniswapFactory = '0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351';
-  yflToken = '0xbDF1Af73400CB3419050e896D86f34d42D5492Da';
-  yYFLAddress = '';
-  linkToken = '';
+  yflToken = '0xbDF1Af73400CB3419050e896D86f34d42D5492Da'; // Deployed
+  yYFLAddress = '0xE4754F7Bf142A630853DAD0E4D1a0050e789B74a'; // Deployed
+  linkToken = '0x20fE562d797A42Dcb3399062AE9546cd06f63280'; // Chainlink Token on Ropsten: Need to confirm again
 
   linkUsdChainlinkOracle = '';
   wethUsdChainlinkOracle = '';
@@ -56,8 +56,8 @@ wallet = Wallet.fromMnemonic(process.env.MNEMONIC);
 connectedWallet = wallet.connect(provider);
 
 // Test addresses
-const governance = '0x0389d755C1833C9b350d4E8B619Eae16deFc1CbA';
-const treasury = '0xE69A81b96FBF5Cb6CAe95d2cE5323Eff2bA0EAE4';
+const governance = '0xAD3e6614754f143a6e602E81086F1dB7afC81569';
+const treasury = '0xAD3e6614754f143a6e602E81086F1dB7afC81569';
 
 const linkListingFeeInUsd = 2500 * 100000000;
 const wethListingFeeInUsd = 3000 * 100000000;
@@ -147,7 +147,6 @@ const deploy = async (artifactPath, args) => {
 };
 
 // From here, all the args are to be determined.
-
 if (!yflToken) {
   deploy(YFLinkArtifact);
   return;
@@ -167,9 +166,9 @@ if (!yYFLAddress) {
 if (!YFLPurchaserAddress) {
   deploy(YFLPurchaserArtifact, [
     governance,
-    link,
-    weth,
-    yfl,
+    linkToken,
+    wethToken,
+    yflToken,
     linkWethPair,
     yflWethPair,
   ]);

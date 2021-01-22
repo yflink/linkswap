@@ -35,10 +35,7 @@ if (process.env.NETWORK == 'mainnet') {
   uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
   linkWethPair = '0x529410569eef63b2d73612f0f844a5133265af68';
 } else if (process.env.NETWORK == 'ropsten') {
-  provider = new ethers.providers.JsonRpcProvider(
-    'https://ropsten.infura.io/v3/9a9861e876774fd8bbfd2f7b44cb1cd8',
-    'ropsten'
-  );
+  provider = ethers.getDefaultProvider('ropsten');
   linkToken = '0x20fE562d797A42Dcb3399062AE9546cd06f63280'; // Chainlink Token on Ropsten: Need to confirm again
   wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
   yflToken = '0x4bC179399A7b404cD3f3498A58A3CD722AeF004d'; // Deployed

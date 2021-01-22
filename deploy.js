@@ -12,6 +12,7 @@ const LinkswapFactoryArtifact = './prodartifacts/LinkswapFactory.json';
 
 let wethToken,
   yflToken,
+  linkWethPair,
   uniswapFactory,
   yYFLAddress,
   linkUsdChainlinkOracle,
@@ -26,30 +27,29 @@ let provider, wallet, connectedWallet;
 
 if (process.env.NETWORK == 'mainnet') {
   provider = ethers.getDefaultProvider('homestead');
-
+  yflToken = '0x28cb7e841ee97947a86B06fA4090C8451f64c0be';
+  linkToken = '0x514910771af9ca656af840dff83e8264ecf986ca';
   wethToken = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
   linkUsdChainlinkOracle = '0x32dbd3214aC75223e27e575C53944307914F7a90';
   wethUsdChainlinkOracle = '0xF79D6aFBb6dA890132F9D7c355e3015f15F3406F';
-
-  yflToken = '0x28cb7e841ee97947a86B06fA4090C8451f64c0be';
-  linkToken = '0x514910771af9ca656af840dff83e8264ecf986ca';
   uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+  linkWethPair = '0x529410569eef63b2d73612f0f844a5133265af68';
 } else if (process.env.NETWORK == 'ropsten') {
   provider = ethers.getDefaultProvider('ropsten');
-
   wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
-  uniswapFactory = '0x9c83dCE8CA20E9aAF9D3efc003b2ea62aBC08351';
   yflToken = '0xbDF1Af73400CB3419050e896D86f34d42D5492Da'; // Deployed
-  yYFLAddress = '0xE4754F7Bf142A630853DAD0E4D1a0050e789B74a'; // Deployed
   linkToken = '0x20fE562d797A42Dcb3399062AE9546cd06f63280'; // Chainlink Token on Ropsten: Need to confirm again
-
-  linkUsdChainlinkOracle = '';
-  wethUsdChainlinkOracle = '';
-  YFLPurchaserAddress = '';
-  LinkswapRouterAddress = '';
-  LinkswapPriceOracleAddress = '';
-  LinkswapPairAddress = '';
-  LinkswapFactoryAddress = '';
+  linkWethPair = '0x98A608D3f29EebB496815901fcFe8eCcC32bE54a';
+  yflWethPair = '0x6d46C94CF93487925cB14912AED99A7A22A34195';
+  yYFLAddress = '0xE4754F7Bf142A630853DAD0E4D1a0050e789B74a'; // Deployed
+  uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
+  linkUsdChainlinkOracle = '0xcfbf4bc22271f4f56a67dda1dcb4549659d0821d'; // https://market.link/feeds/538142f9-a6be-4c9f-b5c4-9f41d80b2f74
+  wethUsdChainlinkOracle = '0x4a504064996f695dd8add2452645046289c4811c'; // https://market.link/feeds/750c5ec1-d7ef-4979-90f6-48b2413b742c
+  YFLPurchaserAddress = '0x05B3a8d48B7D3AaDeAD7fA494cEF68503052534C'; // Deployed
+  LinkswapPairAddress = '0xC26D96e5455f50721a411960bcE372776EF70587'; // Deployed
+  LinkswapPriceOracleAddress = '0x4Dae50eA09E2D07D5eCa1042b613560d9136c682'; // Deployed
+  LinkswapFactoryAddress = '0x30b467615Aa126C143102531c977f7be9Cb36B28'; // Deployed
+  LinkswapRouterAddress = '0xEF4f86Fa246bf8677E566c10Eaa59824660cD1E1';
 }
 
 wallet = Wallet.fromMnemonic(process.env.MNEMONIC);
@@ -58,7 +58,6 @@ connectedWallet = wallet.connect(provider);
 // Test addresses
 const governance = '0xAD3e6614754f143a6e602E81086F1dB7afC81569';
 const treasury = '0xAD3e6614754f143a6e602E81086F1dB7afC81569';
-
 const linkListingFeeInUsd = 2500 * 100000000;
 const wethListingFeeInUsd = 3000 * 100000000;
 const yflListingFeeInUsd = 2000 * 100000000;
@@ -68,7 +67,6 @@ const targetListingLockupAmountInUsd = 25000 * 100000000;
 const minListingLockupPeriod = 7 * 24 * 60 * 60;
 const targetListingLockupPeriod = 30 * 24 * 60 * 60;
 const lockupAmountListingFeeDiscountShare = 500000;
-
 const blocksForNoWithdrawalFee = 30 * 24 * 60 * 4; //(30 days in blocks assuming block every 15 seconds)
 const votingPeriodBlocks = 3 * 24 * 60 * 4; //(3 days in blocks)
 const executionPeriodBlocks = 3 * 24 * 60 * 4; //(3 days in blocks)
@@ -180,11 +178,23 @@ if (!LinkswapPairAddress) {
   return;
 }
 
+if (!LinkswapPriceOracleAddress) {
+  deploy(LinkswapPriceOracleArtifact, [
+    uniswapFactory,
+    linkToken,
+    wethToken,
+    yflToken,
+    linkUsdChainlinkOracle,
+    wethUsdChainlinkOracle,
+  ]);
+  return;
+}
+
 if (!LinkswapFactoryAddress) {
   deploy(LinkswapFactoryArtifact, [
     governance,
     treasury,
-    priceOracle,
+    LinkswapPriceOracleAddress,
     linkListingFeeInUsd,
     wethListingFeeInUsd,
     yflListingFeeInUsd,
@@ -195,25 +205,13 @@ if (!LinkswapFactoryAddress) {
     targetListingLockupPeriod,
     lockupAmountListingFeeDiscountShare,
     linkToken,
-    WETH,
+    wethToken,
     yflToken,
   ]);
   return;
 }
 
 if (!LinkswapRouterAddress) {
-  deploy(LinkswapRouterArtifact, [LinkswapFactoryAddress, _WETH]);
-  return;
-}
-
-if (!LinkswapPriceOracleAddress) {
-  deploy(LinkswapPriceOracleArtifact, [
-    uniswapFactory,
-    linkToken,
-    wethToken,
-    yflToken,
-    linkUsdChainlinkOracle,
-    wethUsdChainlinkOracle,
-  ]);
+  deploy(LinkswapRouterArtifact, [LinkswapFactoryAddress, wethToken]);
   return;
 }

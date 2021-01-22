@@ -35,21 +35,24 @@ if (process.env.NETWORK == 'mainnet') {
   uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
   linkWethPair = '0x529410569eef63b2d73612f0f844a5133265af68';
 } else if (process.env.NETWORK == 'ropsten') {
-  provider = ethers.getDefaultProvider('ropsten');
-  wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
-  yflToken = '0xbDF1Af73400CB3419050e896D86f34d42D5492Da'; // Deployed
+  provider = new ethers.providers.JsonRpcProvider(
+    'https://ropsten.infura.io/v3/9a9861e876774fd8bbfd2f7b44cb1cd8',
+    'ropsten'
+  );
   linkToken = '0x20fE562d797A42Dcb3399062AE9546cd06f63280'; // Chainlink Token on Ropsten: Need to confirm again
+  wethToken = '0xc778417E063141139Fce010982780140Aa0cD5Ab';
+  yflToken = '0x4bC179399A7b404cD3f3498A58A3CD722AeF004d'; // Deployed
   linkWethPair = '0x98A608D3f29EebB496815901fcFe8eCcC32bE54a';
   yflWethPair = '0x6d46C94CF93487925cB14912AED99A7A22A34195';
-  yYFLAddress = '0xE4754F7Bf142A630853DAD0E4D1a0050e789B74a'; // Deployed
+  yYFLAddress = '0x2B2eC1F70A0bb95D6d7C3E6793b00bc4dE113D24'; // Deployed
   uniswapFactory = '0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f';
   linkUsdChainlinkOracle = '0xcfbf4bc22271f4f56a67dda1dcb4549659d0821d'; // https://market.link/feeds/538142f9-a6be-4c9f-b5c4-9f41d80b2f74
   wethUsdChainlinkOracle = '0x4a504064996f695dd8add2452645046289c4811c'; // https://market.link/feeds/750c5ec1-d7ef-4979-90f6-48b2413b742c
-  YFLPurchaserAddress = '0x05B3a8d48B7D3AaDeAD7fA494cEF68503052534C'; // Deployed
-  LinkswapPairAddress = '0xC26D96e5455f50721a411960bcE372776EF70587'; // Deployed
-  LinkswapPriceOracleAddress = '0x4Dae50eA09E2D07D5eCa1042b613560d9136c682'; // Deployed
-  LinkswapFactoryAddress = '0x30b467615Aa126C143102531c977f7be9Cb36B28'; // Deployed
-  LinkswapRouterAddress = '0xEF4f86Fa246bf8677E566c10Eaa59824660cD1E1';
+  YFLPurchaserAddress = '0xbF5E58aAB8001Df3870b699afD54Aab76A50FA8C'; // Deployed
+  LinkswapPairAddress = '0xE666DebC307aD77532aE7aC7345D856cCb866ac9'; // Deployed
+  LinkswapPriceOracleAddress = '0xEBC58B646a71a100B625EB0776948cdf00d7Fd67'; // Deployed
+  LinkswapFactoryAddress = '0x3dBBeFb2B3fE4Ddde958203166321727D581C765'; // Deployed
+  LinkswapRouterAddress = '0x84586651B0347Dd4C17b5Dae15d494e4a61f9F08'; // Deployed
 }
 
 wallet = Wallet.fromMnemonic(process.env.MNEMONIC);

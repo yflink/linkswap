@@ -55,8 +55,8 @@
     "truffle-plugin-verify": "^0.5.4"
   },
   "scripts": {
-    "compile": "npx hardhat compile",
     "build": "sh build.sh",
+    "compile": "npx hardhat compile",
     "clean": "rm -rf './build/'",
     "deploy": "node deploy.js",
     "verify:mainnet": "sh verify.sh",

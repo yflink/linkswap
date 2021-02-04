@@ -59,7 +59,7 @@
     "compile": "npx hardhat compile",
     "clean": "rm -rf './build/'",
     "deploy": "node deploy.js",
-    "verify:mainnet": "sh verify.sh",
+    "verify:mainnet": "sh verify-mainnet.sh",
     "verify:ropsten": "sh verify-ropsten.sh",
     "lint": "yarn prettier './test/**/*.ts' --write",
     "l": "yarn lint",
